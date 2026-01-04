@@ -12,29 +12,6 @@
 
     <style>
         :root {
-            /* Core palette - stark and editorial */
-            --bg-primary: #0a0a0a;
-            --bg-secondary: #141414;
-            --bg-card: #1a1a1a;
-            --bg-hover: #242424;
-
-            --text-primary: #fafafa;
-            --text-secondary: #888;
-            --text-muted: #555;
-
-            /* Accent - electric amber */
-            --accent: #ffb800;
-            --accent-dim: #cc9300;
-            --accent-glow: rgba(255, 184, 0, 0.15);
-
-            /* Danger */
-            --danger: #ff3b30;
-            --danger-dim: #cc2f26;
-
-            /* Borders and lines */
-            --border: #2a2a2a;
-            --border-strong: #3a3a3a;
-
             /* Typography */
             --font-display: 'DM Serif Display', Georgia, serif;
             --font-body: 'Outfit', -apple-system, sans-serif;
@@ -47,10 +24,59 @@
             --space-xl: 40px;
             --space-2xl: 64px;
 
+            /* Accent - electric amber (same for both themes) */
+            --accent: #ffb800;
+            --accent-dim: #cc9300;
+            --accent-glow: rgba(255, 184, 0, 0.15);
+
+            /* Danger */
+            --danger: #ff3b30;
+            --danger-dim: #cc2f26;
+        }
+
+        /* Dark theme (default) */
+        :root, [data-theme="dark"] {
+            /* Core palette - stark and editorial */
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #141414;
+            --bg-card: #1a1a1a;
+            --bg-hover: #242424;
+
+            --text-primary: #fafafa;
+            --text-secondary: #888;
+            --text-muted: #555;
+
+            /* Borders and lines */
+            --border: #2a2a2a;
+            --border-strong: #3a3a3a;
+
             /* Hard shadows - brutalist style */
             --shadow-sm: 4px 4px 0 rgba(0,0,0,0.8);
             --shadow-md: 6px 6px 0 rgba(0,0,0,0.8);
             --shadow-lg: 8px 8px 0 var(--bg-primary);
+            --shadow-accent: 4px 4px 0 var(--accent);
+        }
+
+        /* Light theme */
+        [data-theme="light"] {
+            /* Core palette - clean and bright */
+            --bg-primary: #fafafa;
+            --bg-secondary: #f0f0f0;
+            --bg-card: #ffffff;
+            --bg-hover: #e5e5e5;
+
+            --text-primary: #0a0a0a;
+            --text-secondary: #666;
+            --text-muted: #999;
+
+            /* Borders and lines */
+            --border: #e0e0e0;
+            --border-strong: #d0d0d0;
+
+            /* Hard shadows - brutalist style */
+            --shadow-sm: 4px 4px 0 rgba(0,0,0,0.1);
+            --shadow-md: 6px 6px 0 rgba(0,0,0,0.1);
+            --shadow-lg: 8px 8px 0 var(--bg-secondary);
             --shadow-accent: 4px 4px 0 var(--accent);
         }
 
@@ -914,6 +940,45 @@
             transform: scale(1.2);
             box-shadow: 0 0 0 4px var(--accent-glow);
         }
+
+        /* Theme toggle switch */
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            margin-right: var(--space-md);
+            padding: var(--space-xs) var(--space-sm);
+            border: 1px solid var(--border);
+            background: var(--bg-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .theme-toggle:hover {
+            background: var(--bg-hover);
+            border-color: var(--text-muted);
+            transform: translate(-2px, -2px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .theme-toggle-label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            user-select: none;
+        }
+
+        .theme-toggle-icon {
+            font-size: 16px;
+            line-height: 1;
+            transition: transform 0.3s ease;
+        }
+
+        .theme-toggle:active .theme-toggle-icon {
+            transform: rotate(180deg);
+        }
     </style>
 </head>
 <body>
@@ -924,6 +989,10 @@
                 <h1>Speed <em>Dial</em></h1>
             </div>
             <div class="controls">
+                <div class="theme-toggle" onclick="toggleTheme()">
+                    <span class="theme-toggle-icon" id="theme-icon">🌙</span>
+                    <span class="theme-toggle-label" id="theme-label">Dark</span>
+                </div>
                 <div class="size-control">
                     <label for="card-size">Size</label>
                     <input type="range" id="card-size" class="size-slider" min="120" max="240" value="160" step="10" oninput="updateCardSize(this.value)">
@@ -1049,6 +1118,36 @@
                 grid.style.gridTemplateColumns = `repeat(auto-fill, minmax(${currentCardSize}px, 1fr))`;
             });
             localStorage.setItem('cardSize', currentCardSize);
+        }
+
+        // Theme management
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme') || 'dark';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeUI(newTheme);
+        }
+
+        function updateThemeUI(theme) {
+            const icon = document.getElementById('theme-icon');
+            const label = document.getElementById('theme-label');
+
+            if (theme === 'light') {
+                icon.textContent = '☀️';
+                label.textContent = 'Light';
+            } else {
+                icon.textContent = '🌙';
+                label.textContent = 'Dark';
+            }
+        }
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeUI(savedTheme);
         }
 
         // Initialize with default data
@@ -1650,6 +1749,7 @@
         });
 
         // Initialize
+        initTheme();
         initializeData();
     </script>
 </body>
