@@ -806,6 +806,114 @@
             background: var(--accent);
             color: var(--bg-primary);
         }
+
+        /* Drag and drop styles */
+        .bookmark-card.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+
+        .bookmark-card.drag-over {
+            border-color: var(--accent);
+            background: var(--accent-glow);
+        }
+
+        .bookmark-card:not(.add-bookmark) {
+            cursor: grab;
+        }
+
+        .bookmark-card:not(.add-bookmark):active {
+            cursor: grabbing;
+        }
+
+        /* Edit button */
+        .edit-btn {
+            position: absolute;
+            top: var(--space-sm);
+            right: 36px;
+            width: 24px;
+            height: 24px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: all 0.2s ease;
+            z-index: 10;
+        }
+
+        .bookmark-card:hover .edit-btn {
+            opacity: 1;
+        }
+
+        .edit-btn:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--bg-primary);
+            transform: translate(-2px, -2px);
+            box-shadow: 2px 2px 0 var(--accent-dim);
+        }
+
+        /* Card size control */
+        .size-control {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            margin-right: var(--space-md);
+        }
+
+        .size-control label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+        }
+
+        .size-slider {
+            width: 120px;
+            height: 4px;
+            background: var(--border);
+            border: none;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+            cursor: pointer;
+        }
+
+        .size-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--accent);
+            cursor: pointer;
+            border: 1px solid var(--accent);
+            transition: all 0.2s ease;
+        }
+
+        .size-slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: var(--accent);
+            cursor: pointer;
+            border: 1px solid var(--accent);
+            transition: all 0.2s ease;
+        }
+
+        .size-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 0 4px var(--accent-glow);
+        }
+
+        .size-slider::-moz-range-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 0 4px var(--accent-glow);
+        }
     </style>
 </head>
 <body>
@@ -816,6 +924,10 @@
                 <h1>Speed <em>Dial</em></h1>
             </div>
             <div class="controls">
+                <div class="size-control">
+                    <label for="card-size">Size</label>
+                    <input type="range" id="card-size" class="size-slider" min="120" max="240" value="160" step="10" oninput="updateCardSize(this.value)">
+                </div>
                 <button class="btn btn-primary" onclick="openAddCategoryModal()">+ Category</button>
                 <button class="btn" onclick="exportData()">Export</button>
                 <button class="btn" onclick="importData()">Import</button>
@@ -928,6 +1040,16 @@
         let categories = [];
         let selectedIconUrl = null;
         let selectedIconPath = null;
+        let currentCardSize = 160;
+
+        // Update card size
+        function updateCardSize(size) {
+            currentCardSize = parseInt(size);
+            document.querySelectorAll('.bookmarks-grid').forEach(grid => {
+                grid.style.gridTemplateColumns = `repeat(auto-fill, minmax(${currentCardSize}px, 1fr))`;
+            });
+            localStorage.setItem('cardSize', currentCardSize);
+        }
 
         // Initialize with default data
         function initializeData() {
@@ -968,7 +1090,20 @@
                 ];
                 saveData();
             }
+
+            // Restore saved card size
+            const savedSize = localStorage.getItem('cardSize');
+            if (savedSize) {
+                currentCardSize = parseInt(savedSize);
+                document.getElementById('card-size').value = currentCardSize;
+            }
+
             renderCategories();
+
+            // Apply saved card size
+            if (savedSize) {
+                updateCardSize(currentCardSize);
+            }
         }
 
         // Save data to localStorage
@@ -1014,12 +1149,19 @@
                             <span class="category-count">${category.bookmarks.length}</span>
                         </div>
                         <div class="category-actions">
+                            <button class="btn btn-ghost btn-small" onclick="openEditCategoryModal('${category.id}')">Edit</button>
                             <button class="btn btn-ghost btn-small btn-danger" onclick="deleteCategory('${category.id}')">Delete</button>
                         </div>
                     </div>
-                    <div class="bookmarks-grid">
-                        ${category.bookmarks.map(bookmark => `
-                            <div class="bookmark-card" onclick="openBookmark('${bookmark.url}')">
+                    <div class="bookmarks-grid" data-category-id="${category.id}">
+                        ${category.bookmarks.map((bookmark, index) => `
+                            <div class="bookmark-card"
+                                 draggable="true"
+                                 data-bookmark-id="${bookmark.id}"
+                                 data-category-id="${category.id}"
+                                 data-index="${index}"
+                                 onclick="openBookmark('${bookmark.url}')">
+                                <button class="edit-btn" onclick="event.stopPropagation(); openEditBookmarkModal('${category.id}', '${bookmark.id}')">✎</button>
                                 <button class="delete-btn" onclick="event.stopPropagation(); deleteBookmark('${category.id}', '${bookmark.id}')">×</button>
                                 <img class="bookmark-icon" src="${getIconUrl(bookmark)}" alt="${bookmark.title}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect fill=%22%23333%22 width=%22100%22 height=%22100%22/><text y=%2265%22 x=%2250%22 text-anchor=%22middle%22 font-size=%2250%22 fill=%22%23666%22>?</text></svg>'">
                                 <div class="bookmark-title">${bookmark.title}</div>
@@ -1032,6 +1174,16 @@
                     </div>
                 `;
                 container.appendChild(categoryEl);
+
+                // Add drag and drop event listeners
+                const bookmarkCards = categoryEl.querySelectorAll('.bookmark-card:not(.add-bookmark)');
+                bookmarkCards.forEach(card => {
+                    card.addEventListener('dragstart', handleDragStart);
+                    card.addEventListener('dragend', handleDragEnd);
+                    card.addEventListener('dragover', handleDragOver);
+                    card.addEventListener('drop', handleDrop);
+                    card.addEventListener('dragleave', handleDragLeave);
+                });
             });
         }
 
@@ -1040,8 +1192,85 @@
             window.open(url, '_blank');
         }
 
+        // Drag and drop state
+        let draggedElement = null;
+        let draggedBookmark = null;
+
+        // Drag and drop handlers
+        function handleDragStart(e) {
+            draggedElement = e.currentTarget;
+            draggedBookmark = {
+                categoryId: e.currentTarget.dataset.categoryId,
+                bookmarkId: e.currentTarget.dataset.bookmarkId,
+                index: parseInt(e.currentTarget.dataset.index)
+            };
+            e.currentTarget.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragEnd(e) {
+            e.currentTarget.classList.remove('dragging');
+            document.querySelectorAll('.bookmark-card').forEach(card => {
+                card.classList.remove('drag-over');
+            });
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+            e.preventDefault();
+
+            const targetElement = e.currentTarget;
+            const targetCategoryId = targetElement.dataset.categoryId;
+            const targetBookmarkId = targetElement.dataset.bookmarkId;
+
+            // Don't drop on itself
+            if (draggedBookmark.bookmarkId === targetBookmarkId) {
+                return false;
+            }
+
+            // Only allow reordering within the same category
+            if (draggedBookmark.categoryId === targetCategoryId) {
+                const category = categories.find(c => c.id === targetCategoryId);
+                if (!category) return false;
+
+                // Find source and target bookmarks
+                const sourceIndex = category.bookmarks.findIndex(b => b.id === draggedBookmark.bookmarkId);
+                const targetIndex = category.bookmarks.findIndex(b => b.id === targetBookmarkId);
+
+                if (sourceIndex !== -1 && targetIndex !== -1) {
+                    // Remove from source position
+                    const [movedBookmark] = category.bookmarks.splice(sourceIndex, 1);
+                    // Insert at target position
+                    category.bookmarks.splice(targetIndex, 0, movedBookmark);
+
+                    saveData();
+                    renderCategories();
+                }
+            }
+
+            targetElement.classList.remove('drag-over');
+            return false;
+        }
+
         // Modal functions
+        let editingBookmarkId = null;
+
         function openAddBookmarkModal(categoryId) {
+            editingBookmarkId = null;
             document.getElementById('bookmark-modal-title').textContent = 'Add Bookmark';
             document.getElementById('bookmark-title').value = '';
             document.getElementById('bookmark-url').value = '';
@@ -1056,12 +1285,56 @@
             document.getElementById('bookmark-modal').classList.add('active');
         }
 
+        function openEditBookmarkModal(categoryId, bookmarkId) {
+            editingBookmarkId = bookmarkId;
+            const category = categories.find(c => c.id === categoryId);
+            if (!category) return;
+
+            const bookmark = category.bookmarks.find(b => b.id === bookmarkId);
+            if (!bookmark) return;
+
+            document.getElementById('bookmark-modal-title').textContent = 'Edit Bookmark';
+            document.getElementById('bookmark-title').value = bookmark.title;
+            document.getElementById('bookmark-url').value = bookmark.url;
+            document.getElementById('bookmark-category-id').value = categoryId;
+            document.getElementById('bookmark-icon-path').value = bookmark.iconPath || '';
+
+            if (bookmark.iconPath) {
+                document.getElementById('preview-icon').src = bookmark.iconPath;
+                document.getElementById('icon-source').textContent = 'Current icon';
+                selectedIconPath = bookmark.iconPath;
+            } else {
+                document.getElementById('preview-icon').src = getIconUrl(bookmark);
+                document.getElementById('icon-source').textContent = 'Current favicon';
+                selectedIconPath = null;
+            }
+
+            document.getElementById('icon-search-container').style.display = 'none';
+            document.getElementById('icon-results').innerHTML = '';
+            selectedIconUrl = null;
+            document.getElementById('bookmark-modal').classList.add('active');
+        }
+
         function closeBookmarkModal() {
             document.getElementById('bookmark-modal').classList.remove('active');
         }
 
+        let editingCategoryId = null;
+
         function openAddCategoryModal() {
+            editingCategoryId = null;
+            document.getElementById('category-modal').querySelector('h2').textContent = 'New Category';
             document.getElementById('category-name').value = '';
+            document.getElementById('category-modal').classList.add('active');
+        }
+
+        function openEditCategoryModal(categoryId) {
+            editingCategoryId = categoryId;
+            const category = categories.find(c => c.id === categoryId);
+            if (!category) return;
+
+            document.getElementById('category-modal').querySelector('h2').textContent = 'Edit Category';
+            document.getElementById('category-name').value = category.name;
             document.getElementById('category-modal').classList.add('active');
         }
 
@@ -1251,13 +1524,24 @@
 
             const category = categories.find(c => c.id === categoryId);
             if (category) {
-                const newBookmark = {
-                    id: 'b' + Date.now(),
-                    title,
-                    url,
-                    iconPath
-                };
-                category.bookmarks.push(newBookmark);
+                if (editingBookmarkId) {
+                    // Edit existing bookmark
+                    const bookmark = category.bookmarks.find(b => b.id === editingBookmarkId);
+                    if (bookmark) {
+                        bookmark.title = title;
+                        bookmark.url = url;
+                        bookmark.iconPath = iconPath;
+                    }
+                } else {
+                    // Add new bookmark
+                    const newBookmark = {
+                        id: 'b' + Date.now(),
+                        title,
+                        url,
+                        iconPath
+                    };
+                    category.bookmarks.push(newBookmark);
+                }
                 saveData();
                 renderCategories();
                 closeBookmarkModal();
@@ -1269,12 +1553,21 @@
             event.preventDefault();
             const name = document.getElementById('category-name').value;
 
-            const newCategory = {
-                id: 'c' + Date.now(),
-                name,
-                bookmarks: []
-            };
-            categories.push(newCategory);
+            if (editingCategoryId) {
+                // Edit existing category
+                const category = categories.find(c => c.id === editingCategoryId);
+                if (category) {
+                    category.name = name;
+                }
+            } else {
+                // Add new category
+                const newCategory = {
+                    id: 'c' + Date.now(),
+                    name,
+                    bookmarks: []
+                };
+                categories.push(newCategory);
+            }
             saveData();
             renderCategories();
             closeCategoryModal();
