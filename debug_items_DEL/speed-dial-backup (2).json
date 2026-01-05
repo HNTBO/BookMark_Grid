@@ -1,0 +1,62 @@
+[
+  {
+    "id": "productivity",
+    "name": "Productivity",
+    "bookmarks": [
+      {
+        "id": "b2",
+        "title": "Todoist",
+        "url": "https://todoist.com",
+        "iconPath": null
+      },
+      {
+        "id": "b1",
+        "title": "Clockify",
+        "url": "https://app.clockify.me",
+        "iconPath": null
+      },
+      {
+        "id": "g1",
+        "title": "Gmail",
+        "url": "https://mail.google.com",
+        "iconPath": null
+      },
+      {
+        "id": "b1767553203745",
+        "title": "Open Router",
+        "url": "https://openrouter.ai/docs/quickstart",
+        "iconPath": null
+      }
+    ]
+  },
+  {
+    "id": "google",
+    "name": "Google Services",
+    "bookmarks": [
+      {
+        "id": "g2",
+        "title": "Google Drive",
+        "url": "https://drive.google.com",
+        "iconPath": null
+      },
+      {
+        "id": "g3",
+        "title": "Google Calendar",
+        "url": "https://calendar.google.com",
+        "iconPath": null
+      },
+      {
+        "id": "b3",
+        "title": "Notion",
+        "url": "https://www.notion.so",
+        "iconPath": null
+      },
+      {
+        "id": "b1767552975623",
+        "title": "ComfyUI",
+        "url": "https://www.comfy.org/cloud/pricing",
+        "iconPath": null
+      }
+    ]
+  }
+]
