@@ -13,19 +13,19 @@
     <style>
         :root {
             /* Core palette - stark and editorial */
-            --bg-primary: #0a0a0a;
-            --bg-secondary: #141414;
-            --bg-card: #1a1a1a;
-            --bg-hover: #242424;
+            --bg-primary: #000c17;
+            --bg-secondary: #0a1621;
+            --bg-card: #101c27;
+            --bg-hover: #1a2631;
 
             --text-primary: #fafafa;
             --text-secondary: #888;
             --text-muted: #555;
 
-            /* Accent - electric amber */
-            --accent: #ffb800;
-            --accent-dim: #cc9300;
-            --accent-glow: rgba(255, 184, 0, 0.15);
+            /* Accent - Bright Orange */
+            --accent: #fe9603; 
+            --accent-dim: color-mix(in srgb, var(--accent), black 20%);
+            --accent-glow: color-mix(in srgb, var(--accent), transparent 85%);
 
             /* Danger */
             --danger: #ff3b30;
@@ -65,18 +65,21 @@
             --text-secondary: #93a1a1; /* Base1 */
             --text-muted: #93a1a1;    /* Base1 */
 
-            --accent: #b58900;        /* Yellow */
-            --accent-dim: #946f00;    /* Darker Yellow */
-            --accent-glow: rgba(181, 137, 0, 0.15);
+            --accent: #002b36;        /* Deep Blue (Solarized Base03) */
+            --accent-dim: color-mix(in srgb, var(--accent), black 20%);
+            --accent-glow: color-mix(in srgb, var(--accent), transparent 85%);
 
             --border: #93a1a1;        /* Base1 */
-            --border-strong: #b58900; /* Yellow */
+            --border-strong: #002b36; /* Deep Blue */
 
             --shadow-sm: 4px 4px 0 rgba(0,0,0,0.05);
             --shadow-md: 6px 6px 0 rgba(0,0,0,0.05);
             --shadow-lg: 8px 8px 0 rgba(0,0,0,0.02);
             --shadow-accent: 4px 4px 0 var(--accent);
         }
+
+
+
 
         * {
             margin: 0;
@@ -116,13 +119,14 @@
             transition: max-width 0.2s ease;
         }
 
-        /* Brute Header */
+        /* Brute Header - Filled + Cutout Style */
         .brute-header {
             display: flex;
             align-items: stretch;
             gap: 0;
             margin-bottom: var(--space-xl);
-            border: 1px solid var(--accent);
+            background: var(--accent); /* Filled */
+            border: none;
             height: 100px;
         }
 
@@ -131,21 +135,23 @@
             display: flex;
             align-items: center;
             padding: 0 var(--space-lg);
-            border-right: 1px solid var(--accent);
+            border-right: 2px solid var(--bg-primary);
         }
 
         .header-title-box h1 {
             font-family: var(--font-display);
-            font-size: clamp(1.5rem, 4vw, 2.5rem);
-            font-weight: 400;
+            font-size: 4.5rem; /* Large enough to touch floor/ceiling */
+            font-weight: 700; /* Bolder */
             letter-spacing: -0.02em;
             line-height: 1;
-            color: var(--text-primary);
+            color: var(--bg-primary); /* Cutout look */
+            text-transform: uppercase;
         }
 
         .header-title-box h1 em {
             font-style: normal;
-            color: var(--text-secondary);
+            color: var(--bg-primary); /* Cutout look */
+            opacity: 0.7;
         }
 
         .header-controls {
@@ -157,17 +163,18 @@
         .size-controller {
             width: 200px;
             height: 100%;
-            background: var(--bg-hover);
+            background: color-mix(in srgb, var(--bg-primary) 80%, transparent);
             position: relative;
             cursor: crosshair;
-            border-right: 1px solid var(--accent);
+            border-right: 2px solid var(--bg-primary);
+            overflow: hidden; /* Clip any overflow */
         }
 
         .size-handle {
             position: absolute;
             width: 16px;
             height: 16px;
-            background: var(--accent);
+            background: var(--accent); /* Accent color */
             cursor: grab;
             transform: translate(-50%, -50%);
             left: 50%;
@@ -176,12 +183,11 @@
         }
 
         .size-handle:hover {
-            box-shadow: 0 0 0 4px var(--accent-glow);
+            box-shadow: 0 0 0 4px rgba(0,0,0,0.1);
         }
 
         .size-handle.dragging {
             cursor: grabbing;
-            box-shadow: 0 0 0 6px var(--accent-glow);
         }
 
         /* Action Buttons */
@@ -193,10 +199,11 @@
         .action-btn {
             width: 40px;
             flex: 1;
-            background: var(--bg-secondary);
+            background: transparent;
             border: none;
-            border-bottom: 1px solid var(--accent);
-            color: var(--text-primary);
+            border-bottom: 2px solid var(--bg-primary);
+            color: var(--bg-primary); /* Cutout look */
+            opacity: 1; /* Fully opaque */
             font-size: 18px;
             font-weight: 500;
             cursor: pointer;
@@ -211,8 +218,9 @@
         }
 
         .action-btn:hover {
-            background: var(--accent);
+            background: rgba(0,0,0,0.1);
             color: var(--bg-primary);
+            opacity: 1;
         }
 
         /* Legacy h1 styles for modals */
@@ -320,15 +328,17 @@
             display: flex;
             align-items: stretch;
             margin-bottom: var(--space-lg);
-            border: 1px solid var(--accent);
+            background: var(--accent); /* Filled with accent to create tint under overlay */
+            border: none;
             height: 44px;
         }
 
         .category-edit-btn {
-            background: var(--bg-secondary);
+            background: var(--accent); /* Filled accent */
             border: none;
-            border-left: 1px solid var(--accent);
-            color: var(--text-muted);
+            border-left: 2px solid var(--bg-primary);
+            color: var(--bg-primary); /* Cutout look */
+            opacity: 1;
             cursor: pointer;
             font-size: 1rem;
             width: 44px;
@@ -339,19 +349,22 @@
         }
 
         .category-edit-btn:hover {
-            background: var(--accent);
+            background: rgba(0,0,0,0.1);
             color: var(--bg-primary);
+            opacity: 1;
         }
 
         .category-title {
             font-family: var(--font-display);
-            font-size: 1.25rem;
-            font-weight: 400;
-            color: var(--text-primary);
+            font-size: 1.7rem; /* Increased size */
+            font-weight: 0; /* Bolder */
+            background: color-mix(in srgb, var(--bg-primary) 80%, transparent); /* Background colored cutout */
+            color: var(--accent); /* Accent color */
             padding: 0 var(--space-md);
             display: flex;
             align-items: center;
             flex: 1;
+            text-transform: uppercase;
         }
 
         /* Bookmark Grid - Asymmetric */
@@ -370,11 +383,12 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: var(--space-lg);
+            padding: clamp(6px, 10cqi, 24px); /* Dynamic padding */
             cursor: pointer;
             position: relative;
             overflow: hidden;
             transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+            container-type: inline-size; /* For scaling children */
         }
 
         .bookmark-card::before {
@@ -405,7 +419,7 @@
         /* Add bookmark card */
         .bookmark-card.add-bookmark {
             border-style: dashed;
-            border-color: var(--border-strong);
+            border-color: color-mix(in srgb, var(--accent) 40%, transparent); /* Muted accent */
             background: transparent;
         }
 
@@ -419,9 +433,12 @@
         }
 
         .bookmark-icon {
-            width: 56px;
-            height: 56px;
-            margin-bottom: var(--space-md);
+            width: 45%;
+            height: auto;
+            aspect-ratio: 1;
+            min-width: 24px;
+            max-width: 56px;
+            margin-bottom: 8px;
             object-fit: contain;
             filter: grayscale(20%);
             transition: filter 0.3s ease, transform 0.3s ease;
@@ -433,21 +450,35 @@
         }
 
         .bookmark-title {
-            font-size: 13px;
+            font-size: clamp(9px, 2.5vw, 13px);
             font-weight: 500;
             color: var(--text-primary);
+            display: block;
             text-align: center;
             overflow: hidden;
             text-overflow: ellipsis;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            line-height: 1.4;
+            white-space: nowrap;
+            line-height: 1.2;
             max-width: 100%;
         }
 
+        /* Hide title when card is too small */
+        @container (max-width: 75px) {
+            .bookmark-title, .add-bookmark-text {
+                display: none;
+            }
+            .bookmark-icon {
+                width: 60%;
+                max-width: none;
+                margin-bottom: 0;
+            }
+            .plus-icon {
+                font-size: 28px;
+            }
+        }
+
         .plus-icon {
-            font-size: 32px;
+            font-size: clamp(24px, 35cqi, 36px);
             font-weight: 300;
             color: var(--text-muted);
             transition: all 0.3s ease;
@@ -459,7 +490,7 @@
         }
 
         .add-bookmark-text {
-            font-size: 12px;
+            font-size: clamp(9px, 12cqi, 12px);
             color: var(--text-muted);
             margin-top: var(--space-sm);
             font-weight: 500;
@@ -1182,6 +1213,13 @@
                         <label for="show-card-names">Show Card Names</label>
                         <input type="checkbox" id="show-card-names" checked onchange="toggleCardNames(this.checked)">
                     </div>
+                    <div class="settings-row">
+                        <label for="accent-color-picker">Accent Color</label>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <input type="color" id="accent-color-picker" oninput="updateAccentColor(this.value)" style="background: none; border: none; width: 32px; height: 32px; cursor: pointer; padding: 0;">
+                            <button class="btn btn-small" onclick="resetAccentColor()">Reset</button>
+                        </div>
+                    </div>
                 </div>
                 <div class="settings-section">
                     <h3>Data</h3>
@@ -1199,10 +1237,9 @@
         const API_BASE = window.location.origin;
 
         // Data structure
-        let categories = [];
         let selectedIconUrl = null;
         let selectedIconPath = null;
-        let currentCardSize = 160;
+        let currentCardSize = 90; // Default to mid-range
         let currentPageWidth = 100; // percentage
         let currentTheme = 'dark';
         let showCardNames = true;
@@ -1216,6 +1253,41 @@
             // Update button icon
             const btn = document.getElementById('theme-toggle-btn');
             btn.innerHTML = currentTheme === 'dark' ? '☀' : '☾';
+
+            // Apply saved accent for this theme, or revert to default
+            const storageKey = `accentColor_${currentTheme}`;
+            const savedAccent = localStorage.getItem(storageKey);
+            const picker = document.getElementById('accent-color-picker');
+
+            if (savedAccent) {
+                document.documentElement.style.setProperty('--accent', savedAccent);
+                if (picker) picker.value = savedAccent;
+            } else {
+                document.documentElement.style.removeProperty('--accent');
+                if (picker) {
+                     // small timeout to let CSS variable update to default
+                     setTimeout(() => {
+                         picker.value = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+                     }, 50);
+                }
+            }
+        }
+
+        // Accent Color Management
+        function updateAccentColor(color) {
+            document.documentElement.style.setProperty('--accent', color);
+            localStorage.setItem(`accentColor_${currentTheme}`, color);
+        }
+
+        function resetAccentColor() {
+            localStorage.removeItem(`accentColor_${currentTheme}`);
+            document.documentElement.style.removeProperty('--accent');
+            
+            // Reset picker value to computed style
+            setTimeout(() => {
+                const defaultColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+                document.getElementById('accent-color-picker').value = defaultColor;
+            }, 10);
         }
 
         // Settings Modal
@@ -1238,8 +1310,14 @@
         // Update card size (X-axis)
         function updateCardSize(size) {
             currentCardSize = parseInt(size);
+            // Calculate gap: 60px -> 8px, 120px -> 24px
+            // Normalized 0-1
+            const t = (currentCardSize - 60) / 60; 
+            const gap = Math.round(8 + t * 16); 
+
             document.querySelectorAll('.bookmarks-grid').forEach(grid => {
                 grid.style.gridTemplateColumns = `repeat(auto-fill, minmax(${currentCardSize}px, 1fr))`;
+                grid.style.gap = `${gap}px`;
             });
             localStorage.setItem('cardSize', currentCardSize);
         }
@@ -1260,13 +1338,18 @@
             // Calculate handle position from current values
             function updateHandlePosition() {
                 const rect = controller.getBoundingClientRect();
-                // X: cardSize maps 120-240 to 0-100%
-                const xPercent = ((currentCardSize - 120) / 120) * 100;
+                const handleRadius = 8; // Half of 16px handle
+                // X: cardSize maps 60-120 to 0-100%
+                const xPercent = ((currentCardSize - 60) / 60) * 100;
                 // Y: pageWidth maps 100-50 to 0-100% (inverted - top = wider)
                 const yPercent = ((100 - currentPageWidth) / 50) * 100;
                 
-                handle.style.left = `${Math.max(8, Math.min(rect.width - 8, (xPercent / 100) * rect.width))}px`;
-                handle.style.top = `${Math.max(8, Math.min(rect.height - 8, (yPercent / 100) * rect.height))}px`;
+                // Clamp so handle edge stays inside container
+                const xPos = handleRadius + (xPercent / 100) * (rect.width - handleRadius * 2);
+                const yPos = handleRadius + (yPercent / 100) * (rect.height - handleRadius * 2);
+                
+                handle.style.left = `${xPos}px`;
+                handle.style.top = `${yPos}px`;
             }
 
             function startDrag(e) {
@@ -1279,20 +1362,23 @@
                 if (!isDragging) return;
                 
                 const rect = controller.getBoundingClientRect();
+                const handleRadius = 8;
                 const clientX = e.touches ? e.touches[0].clientX : e.clientX;
                 const clientY = e.touches ? e.touches[0].clientY : e.clientY;
                 
-                // Calculate percentages
-                let xPercent = ((clientX - rect.left) / rect.width) * 100;
-                let yPercent = ((clientY - rect.top) / rect.height) * 100;
+                // Calculate percentages within the bounded area
+                const innerWidth = rect.width - handleRadius * 2;
+                const innerHeight = rect.height - handleRadius * 2;
+                let xPercent = ((clientX - rect.left - handleRadius) / innerWidth) * 100;
+                let yPercent = ((clientY - rect.top - handleRadius) / innerHeight) * 100;
                 
                 // Clamp values
                 xPercent = Math.max(0, Math.min(100, xPercent));
                 yPercent = Math.max(0, Math.min(100, yPercent));
                 
                 // Convert to actual values
-                // X: 0-100% maps to 120-240px card size
-                const newCardSize = Math.round(120 + (xPercent / 100) * 120);
+                // X: 0-100% maps to 60-120px card size
+                const newCardSize = Math.round(60 + (xPercent / 100) * 60);
                 // Y: 0-100% maps to 100-50% page width (inverted)
                 const newPageWidth = Math.round(100 - (yPercent / 100) * 50);
                 
@@ -1320,13 +1406,16 @@
             controller.addEventListener('click', (e) => {
                 if (e.target === handle) return;
                 const rect = controller.getBoundingClientRect();
-                let xPercent = ((e.clientX - rect.left) / rect.width) * 100;
-                let yPercent = ((e.clientY - rect.top) / rect.height) * 100;
+                const handleRadius = 8;
+                const innerWidth = rect.width - handleRadius * 2;
+                const innerHeight = rect.height - handleRadius * 2;
+                let xPercent = ((e.clientX - rect.left - handleRadius) / innerWidth) * 100;
+                let yPercent = ((e.clientY - rect.top - handleRadius) / innerHeight) * 100;
                 
                 xPercent = Math.max(0, Math.min(100, xPercent));
                 yPercent = Math.max(0, Math.min(100, yPercent));
                 
-                const newCardSize = Math.round(120 + (xPercent / 100) * 120);
+                const newCardSize = Math.round(60 + (xPercent / 100) * 60);
                 const newPageWidth = Math.round(100 - (yPercent / 100) * 50);
                 
                 updateCardSize(newCardSize);
@@ -1378,6 +1467,17 @@
             }
             document.documentElement.setAttribute('data-theme', currentTheme);
             document.getElementById('theme-toggle-btn').innerHTML = currentTheme === 'dark' ? '☀' : '☾';
+
+            // Restore Accent Color for current theme
+            const savedAccent = localStorage.getItem(`accentColor_${currentTheme}`);
+            const picker = document.getElementById('accent-color-picker');
+            if (savedAccent) {
+                document.documentElement.style.setProperty('--accent', savedAccent);
+                if (picker) picker.value = savedAccent;
+            } else if (picker) {
+                // Initialize picker with default value
+                picker.value = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+            }
 
             // Restore card names setting
             const savedShowCardNames = localStorage.getItem('showCardNames');
