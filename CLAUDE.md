@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+> **MANDATORY**: Read [AGENTS.md](AGENTS.md) before starting any work. It contains critical workflow rules for issue tracking with beads (`bd`) and session completion protocols.
+
 ## Project Overview
 
 Brute Bookmarks is a self-hosted bookmark manager with automatic icon fetching. Single-page vanilla JS frontend communicating with an Express backend. Optional Clerk authentication.
