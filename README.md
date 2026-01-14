@@ -1,6 +1,6 @@
 # Brute Bookmarks
 
-A beautiful, self-hosted bookmark manager featuring automatic high-quality icon fetching from Wikimedia Commons, custom icon uploads, and category organization.
+A beautiful, self-hosted bookmark manager featuring automatic high-quality icon fetching from Wikimedia Commons, custom icon uploads, emoji icons, and category organization. Optional multi-user authentication via Clerk.
 
 ## Features
 
@@ -12,46 +12,75 @@ A beautiful, self-hosted bookmark manager featuring automatic high-quality icon 
 
 ### Icon Management
 - **Automatic Icon Fetching** - Search and download high-quality logos from Wikimedia Commons
+- **Emoji Icons** - Search and use Twemoji icons for your bookmarks
 - **Server-Side Caching** - Icons are downloaded once and cached on your server
 - **Custom Upload** - Upload your own custom icons (with drag-and-drop support)
 - **Favicon Fallback** - Automatically fetch and cache favicons for quick setup
 
 ### Data Management
-- **Local Storage** - All bookmark data stored in browser localStorage
+- **Server-Side Storage** - Bookmark data persisted in `/data/bookmarks.json`
 - **Export/Import** - Backup and restore your bookmarks as JSON
 - **Delete Controls** - Easy deletion of individual bookmarks or entire categories
+
+### Authentication (Optional)
+- **Clerk Integration** - Optional multi-user authentication
+- **Works Without Auth** - Runs as single-user without configuration
 
 ## Technology Stack
 
 - **Frontend**: Vanilla JavaScript, HTML5, CSS3
 - **Backend**: Node.js + Express
 - **Image Processing**: Sharp (for icon optimization)
-- **Icon Source**: Wikimedia Commons API
-- **Storage**: Browser localStorage for data, filesystem for icons
+- **Icon Sources**: Wikimedia Commons API, Twemoji (Twitter emojis), DuckDuckGo favicons
+- **Storage**: Server filesystem for icons and bookmark data
+- **Auth**: Clerk (optional)
+- **Deployment**: Docker, systemd, nginx
 
 ## Quick Start
 
-### Option 1: Automated Deployment (Recommended)
+### Option 1: Docker (Recommended)
 
 ```bash
-# SSH into your VPS
-ssh user@your-vps-ip
+# Clone the repository
+git clone https://github.com/yourusername/brute-bookmarks.git
+cd brute-bookmarks
 
-# Run the automated deployment script
-sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/HNTBO/BookMark_Grid/claude/style-vps-dashboard-k3tgV/deploy.sh)"
+# Copy and configure environment (optional for auth)
+cp .env.example .env
+# Edit .env if you want Clerk authentication
+
+# Run with Docker Compose
+docker-compose up -d
 ```
 
-### Option 2: Manual Installation
+Visit `http://localhost:3002` in your browser.
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed manual installation instructions.
+### Option 2: Local Development
+
+```bash
+# Clone and install
+git clone https://github.com/yourusername/brute-bookmarks.git
+cd brute-bookmarks
+npm install
+
+# Copy environment file
+cp .env.example .env
+
+# Start development server (with hot-reload)
+npm run dev
+```
+
+### Option 3: VPS Deployment
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed VPS deployment with nginx and systemd.
 
 ## Icon Search Procedure
 
-When adding a bookmark, you have three options for icons:
+When adding a bookmark, you have four options for icons:
 
 ### 1. Use Favicon (Quick & Easy)
 - Click "Use Favicon" button
-- Automatically fetches the site's favicon
+- Automatically fetches the site's favicon via DuckDuckGo
 - Cached on server for fast loading
 
 ### 2. Search Wikimedia Commons (High Quality)
@@ -61,7 +90,13 @@ When adding a bookmark, you have three options for icons:
 - Click to select and automatically download to server
 - Icons are optimized and cached
 
-### 3. Upload Custom Icon
+### 3. Search Emojis (Twemoji)
+- Click "Search Emojis" button
+- Enter keyword (e.g., "music", "coffee", "rocket")
+- Browse Twitter's open-source emoji library
+- High-quality vector-based emoji icons
+
+### 4. Upload Custom Icon
 - Click "Upload Custom" or drag-and-drop image
 - Supports: PNG, JPG, GIF, SVG, WebP, ICO
 - Automatically optimized to 128x128px
@@ -88,49 +123,124 @@ When adding a bookmark, you have three options for icons:
 
 ## API Endpoints
 
-### GET /api/search-icons
+All endpoints except `/api/config` require authentication when Clerk is configured.
+
+### GET /api/config
+Returns Clerk publishable key (public endpoint)
+```json
+{ "clerkPublishableKey": "pk_test_..." }
+```
+
+### GET /api/search-icons?query=X
 Search for icons on Wikimedia Commons
-- Query param: `query` (search term)
-- Returns: Array of icon objects with URLs
+```bash
+GET /api/search-icons?query=github
+```
+Returns: `{ "icons": [{ "title", "url", "thumbUrl", "width", "height" }] }`
 
 ### POST /api/download-icon
 Download and cache an icon from URL
-- Body: `{ url, source }`
-- Returns: `{ success, iconPath, cached }`
+```json
+{ "url": "https://...", "source": "wikimedia" }
+```
+Returns: `{ "success": true, "iconPath": "/icons/abc123.png", "cached": false }`
 
 ### POST /api/upload-icon
-Upload a custom icon file
-- Body: FormData with `icon` file
-- Returns: `{ success, iconPath }`
+Upload a custom icon file (multipart/form-data)
+- Field: `icon` (image file)
+- Returns: `{ "success": true, "iconPath": "/icons/custom_xyz.png" }`
 
 ### POST /api/get-favicon
 Fetch and cache favicon for a URL
-- Body: `{ url }`
-- Returns: `{ success, iconPath, cached }`
+```json
+{ "url": "https://github.com" }
+```
+Returns: `{ "success": true, "iconPath": "/icons/favicon_abc.png", "cached": false }`
+
+### GET /api/search-emojis?query=X
+Search Twemoji library
+```bash
+GET /api/search-emojis?query=rocket
+```
+Returns: `{ "emojis": [{ "code", "keyword", "url", "thumbUrl" }] }`
+
+### POST /api/download-emoji
+Download and convert emoji SVG to cached PNG
+```json
+{ "code": "1f680" }
+```
+Returns: `{ "success": true, "iconPath": "/icons/emoji_1f680.png", "cached": false }`
+
+### GET /api/data
+Get all bookmark data
+Returns: Array of category objects
+
+### POST /api/data
+Save bookmark data
+```json
+[{ "id": "cat1", "name": "Category", "bookmarks": [...] }]
+```
+Returns: `{ "success": true }`
 
 ## File Structure
 
 ```
-BookMark_Grid/
+brute-bookmarks/
 ├── public/
-│   └── index.html          # Frontend application
+│   ├── index.html          # Frontend application (single-page)
+│   └── js/
+│       ├── auth.js         # Clerk SDK integration
+│       └── auth-fetch.js   # Token injection for API calls
+├── middleware/
+│   └── clerk-auth.js       # Express Clerk middleware
 ├── icons/                  # Cached icons (auto-created)
-├── server.js              # Express backend server
-├── package.json           # Node.js dependencies
-├── nginx.conf             # Nginx configuration
-├── bookmarks.service      # Systemd service file
-├── deploy.sh              # Automated deployment script
-├── DEPLOYMENT.md          # Detailed deployment guide
-└── README.md              # This file
+├── data/
+│   └── bookmarks.json      # Persisted bookmark data
+├── docs/                   # Additional documentation
+├── server.js               # Express backend server
+├── package.json            # Node.js dependencies
+├── Dockerfile              # Multi-stage Docker build
+├── docker-compose.yml      # Docker Compose configuration
+├── nginx.conf              # Nginx reverse proxy config
+├── bookmarks.service       # Systemd service file
+├── deploy.sh               # Automated VPS deployment
+├── DEPLOYMENT.md           # Detailed VPS deployment guide
+├── CLAUDE.md               # AI assistant guidance
+└── README.md               # This file
 ```
 
 ## Configuration
 
-### Changing Port
-Edit `server.js` or set environment variable:
+### Environment Variables
+
+Create a `.env` file from the example:
 ```bash
-export PORT=3001
+cp .env.example .env
 ```
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `PORT` | No | Server port (default: 3002) |
+| `NODE_ENV` | No | `development` or `production` |
+| `CLERK_PUBLISHABLE_KEY` | No | Clerk frontend key (enables auth) |
+| `CLERK_SECRET_KEY` | No | Clerk backend key (enables auth) |
+
+### Running Without Authentication
+
+Leave `CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` empty or unset. The app runs as a single-user bookmark manager without login.
+
+### Enabling Authentication
+
+1. Create a [Clerk](https://clerk.com) account
+2. Create an application in Clerk dashboard
+3. Copy your API keys to `.env`:
+   ```env
+   CLERK_PUBLISHABLE_KEY=pk_test_...
+   CLERK_SECRET_KEY=sk_test_...
+   ```
+4. Restart the server
+
+See [docs/clerk-guide.md](docs/clerk-guide.md) for detailed Clerk setup.
 
 ### Custom Domain
 1. Update `nginx.conf` with your domain
@@ -139,44 +249,55 @@ export PORT=3001
 
 ## Maintenance
 
-### View Logs
+### Docker Commands
 ```bash
-# Application logs
+# View logs
+docker-compose logs -f
+
+# Restart
+docker-compose restart
+
+# Rebuild and restart
+docker-compose up -d --build
+
+# Stop
+docker-compose down
+
+# Backup data and icons
+docker cp brute-bookmarks:/app/data ./backup-data
+docker cp brute-bookmarks:/app/icons ./backup-icons
+```
+
+### Systemd Commands (VPS)
+```bash
+# View logs
 journalctl -u bookmarks -f
 
-# Nginx access logs
-tail -f /var/log/nginx/bookmarks.fmotion.fr.access.log
-
-# Nginx error logs
-tail -f /var/log/nginx/bookmarks.fmotion.fr.error.log
-```
-
-### Update Application
-```bash
-cd /var/www/bookmarks.fmotion.fr
-git pull
-npm install
+# Restart service
 sudo systemctl restart bookmarks
+
+# Check status
+sudo systemctl status bookmarks
 ```
 
-### Backup Icons
+### Backup
 ```bash
-# Backup icons directory
-tar -czf icons-backup-$(date +%Y%m%d).tar.gz /var/www/bookmarks.fmotion.fr/icons
+# Backup data and icons (local/VPS)
+tar -czf bookmarks-backup-$(date +%Y%m%d).tar.gz data/ icons/
 ```
 
 ### Clear Icon Cache
 ```bash
 # Remove all cached icons
-sudo rm -rf /var/www/bookmarks.fmotion.fr/icons/*
+rm -rf icons/*
 ```
 
 ## Troubleshooting
 
 ### Icons not loading
-- Check icons directory permissions: `ls -la /var/www/bookmarks.fmotion.fr/icons`
-- Verify service is running: `systemctl status bookmarks`
-- Check logs: `journalctl -u bookmarks -n 50`
+- Check icons directory exists and is writable: `ls -la icons/`
+- Verify service is running: `docker-compose ps` or `systemctl status bookmarks`
+- Check logs for errors
 
 ### Wikimedia search failing
 - Verify internet connectivity from server
@@ -184,17 +305,23 @@ sudo rm -rf /var/www/bookmarks.fmotion.fr/icons/*
 - Try different search terms
 
 ### Upload failing
-- Check nginx `client_max_body_size` setting
+- Check nginx `client_max_body_size` setting (if using nginx)
 - Verify icons directory is writable
 - Check disk space: `df -h`
+
+### Authentication issues
+- Verify Clerk keys are correct in `.env`
+- Check browser console for Clerk SDK errors
+- Ensure Clerk application URLs are configured correctly
 
 ## Security Notes
 
 - All icons are processed and optimized server-side
 - File uploads are restricted to image types only
 - Maximum file size: 5MB (configurable in server.js)
-- Icons stored outside public directory by default
-- HTTPS enforced via nginx
+- API endpoints protected by Clerk authentication (when configured)
+- Docker runs as non-root user
+- HTTPS recommended via nginx reverse proxy
 
 ## Browser Compatibility
 
@@ -210,7 +337,9 @@ MIT
 ## Credits
 
 - Icon source: [Wikimedia Commons](https://commons.wikimedia.org)
-- Favicon service: Google Favicon API
+- Emoji source: [Twemoji](https://github.com/twitter/twemoji) (Twitter's open-source emoji library)
+- Favicon service: [DuckDuckGo](https://duckduckgo.com)
+- Authentication: [Clerk](https://clerk.com)
 - Inspired by: Speed Dial 2 Chrome Extension (RIP)
 
 ## Support
@@ -223,7 +352,7 @@ For issues or questions:
 
 ## Future Enhancements
 
-- [ ] Multi-user support with authentication
+- [x] Multi-user support with authentication (Clerk)
 - [ ] Drag-and-drop bookmark reordering
 - [ ] Bookmark tags and search
 - [ ] Dark/light theme toggle
